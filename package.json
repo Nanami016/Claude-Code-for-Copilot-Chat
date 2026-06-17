@@ -63,13 +63,14 @@
         },
         "claude-code-copilot.permissionMode": {
           "type": "string",
-          "default": "default",
+          "default": "acceptEdits",
           "enum": [
             "default",
             "acceptEdits",
+            "bypassPermissions",
             "plan"
           ],
-          "description": "Permission mode for Claude Code"
+          "description": "Permission mode for Claude Code CLI. In interactive stdin mode (non-TTY), 'acceptEdits' or 'bypassPermissions' is recommended since permission prompts cannot be displayed."
         },
         "claude-code-copilot.interactiveMode": {
           "type": "boolean",

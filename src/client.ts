@@ -95,7 +95,7 @@ export class ClaudeCodeClient {
     constructor(options: ClaudeClientOptions = {}) {
         this.cliPath = options.cliPath || 'claude';
         this.model = options.model;
-        this.permissionMode = options.permissionMode || 'default';
+        this.permissionMode = options.permissionMode || 'acceptEdits';
         this.cwd = options.cwd;
         this.interactiveMode = options.interactiveMode !== undefined ? options.interactiveMode : true;
     }

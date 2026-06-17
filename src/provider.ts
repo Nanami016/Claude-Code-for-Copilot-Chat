@@ -33,7 +33,7 @@ export class ClaudeCodeChatProvider implements vscode.LanguageModelChatProvider 
         const config = vscode.workspace.getConfiguration('claude-code-copilot');
         const cliPath = config.get<string>('cliPath', 'claude');
         const model = config.get<string>('defaultModel', '');
-        const permissionMode = config.get<string>('permissionMode', 'default');
+        const permissionMode = config.get<string>('permissionMode', 'acceptEdits');
         const interactiveMode = config.get<boolean>('interactiveMode', true);
 
         return new ClaudeCodeClient({
