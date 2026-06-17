@@ -237,9 +237,8 @@ export class ClaudeCodeClient {
                 }
 
                 // Schedule nowledge-mem session save in the background.
-                // Claude Code writes transcript files even in non-TTY mode,
-                // so we call nmem directly instead of relying on hooks.
-                this.saveToNowledgeMem();
+                // Small delay ensures Claude Code has flushed the transcript file.
+                setTimeout(() => this.saveToNowledgeMem(), 500);
 
                 callbacks.onDone();
                 resolve();
