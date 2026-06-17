@@ -1,0 +1,89 @@
+{
+  "name": "claude-code-for-copilot",
+  "displayName": "Claude Code for Copilot Chat",
+  "description": "Use Claude Code CLI directly in GitHub Copilot Chat. Zero config, uses your existing Claude Code installation.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.116.0",
+    "node": ">=24"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "copilot",
+    "github copilot",
+    "copilot chat",
+    "language model",
+    "ai",
+    "chat"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "cc-switch",
+        "displayName": "CC-Switch"
+      }
+    ],
+    "commands": [
+      {
+        "command": "claude-code-copilot.showLogs",
+        "title": "Claude Code: Show Logs"
+      },
+      {
+        "command": "claude-code-copilot.checkStatus",
+        "title": "Claude Code: Check CLI Status"
+      }
+    ],
+    "configuration": {
+      "title": "Claude Code for Copilot",
+      "properties": {
+        "claude-code-copilot.cliPath": {
+          "type": "string",
+          "default": "claude",
+          "description": "Path to the Claude Code CLI executable"
+        },
+        "claude-code-copilot.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default Claude model to use (leave empty for CLI default)"
+        },
+        "claude-code-copilot.permissionMode": {
+          "type": "string",
+          "default": "default",
+          "enum": [
+            "default",
+            "acceptEdits",
+            "plan"
+          ],
+          "description": "Permission mode for Claude Code"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.116.0",
+    "typescript": "^5.7.0",
+    "@vscode/vsce": "^3.0.0"
+  }
+}
