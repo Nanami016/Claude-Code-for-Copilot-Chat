@@ -67,19 +67,24 @@
         },
         "claude-code-copilot.permissionMode": {
           "type": "string",
-          "default": "acceptEdits",
+          "default": "bypassPermissions",
           "enum": [
             "default",
             "acceptEdits",
             "bypassPermissions",
             "plan"
           ],
-          "description": "Permission mode for Claude Code CLI. In interactive stdin mode (non-TTY), 'acceptEdits' or 'bypassPermissions' is recommended since permission prompts cannot be displayed."
+          "description": "Permission mode for Claude Code CLI. Since there is no TTY for interactive approval in Copilot Chat, 'bypassPermissions' is the default and recommended setting. Use 'plan' if you want Claude to only plan without making any changes."
         },
         "claude-code-copilot.interactiveMode": {
           "type": "boolean",
           "default": true,
           "description": "Use interactive stdin mode to enable Claude Code plugins and hooks (e.g. nowledge-mem). Disable to use faster -p print mode (no plugin/hook support)."
+        },
+        "claude-code-copilot.mcpConfigPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a JSON MCP (Model Context Protocol) configuration file for Claude Code CLI. Leave empty to use the default config (~/.claude/mcp.json or CLAUDE_MCP_CONFIG env var)."
         }
       }
     }

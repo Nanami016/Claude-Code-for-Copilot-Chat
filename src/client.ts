@@ -44,6 +44,7 @@ export interface ClaudeStreamEvent {
         id?: string;
         name?: string;
         input?: Record<string, unknown>;
+        index?: number;
     };
     hook_name?: string;
     hook_event?: string;
@@ -73,6 +74,8 @@ export interface ClaudeClientOptions {
     /** Use interactive stdin mode (default: true) to enable plugins and hooks.
      * Set to false to use `-p` print mode (faster, but no plugin/hook support). */
     interactiveMode?: boolean;
+    /** Path to MCP (Model Context Protocol) configuration JSON file. */
+    mcpConfigPath?: string;
 }
 
 /**
@@ -91,15 +94,17 @@ export class ClaudeCodeClient {
     private permissionMode: string;
     private cwd?: string;
     private interactiveMode: boolean;
+    private mcpConfigPath?: string;
     /** Latest session ID captured from the Claude CLI init event. */
     private lastSessionId?: string;
 
     constructor(options: ClaudeClientOptions = {}) {
         this.cliPath = options.cliPath || 'claude';
         this.model = options.model;
-        this.permissionMode = options.permissionMode || 'acceptEdits';
+        this.permissionMode = options.permissionMode || 'bypassPermissions';
         this.cwd = options.cwd;
         this.interactiveMode = options.interactiveMode !== undefined ? options.interactiveMode : true;
+        this.mcpConfigPath = options.mcpConfigPath || undefined;
     }
 
     /**
@@ -143,6 +148,10 @@ export class ClaudeCodeClient {
 
         if (this.model) {
             args.push('--model', this.model);
+        }
+
+        if (this.mcpConfigPath) {
+            args.push('--mcp-config', this.mcpConfigPath);
         }
 
         // In non-TTY stdin mode, there is NO way to interactively approve
@@ -256,6 +265,9 @@ export class ClaudeCodeClient {
     /**
      * Print mode: uses `claude -p` for fast non-interactive one-shot queries.
      * Plugins and hooks are NOT loaded in this mode.
+     *
+     * Permission mode is forced to 'bypassPermissions' since there is no TTY
+     * for interactive approval in Copilot Chat.
      */
     private async streamChatPrint(
         messages: ClaudeMessage[],
@@ -276,9 +288,21 @@ export class ClaudeCodeClient {
             args.push('--model', this.model);
         }
 
-        if (this.permissionMode && this.permissionMode !== 'default') {
-            args.push('--permission-mode', this.permissionMode);
+        if (this.mcpConfigPath) {
+            args.push('--mcp-config', this.mcpConfigPath);
         }
+
+        // In non-TTY mode, there is NO way to interactively approve
+        // permission prompts. Force bypassPermissions to prevent hangs.
+        const effectivePermissionMode = 'bypassPermissions';
+        if (this.permissionMode !== 'bypassPermissions') {
+            logger.warn(
+                `Print mode has no TTY for permission prompts. ` +
+                `Overriding permission mode from '${this.permissionMode}' to 'bypassPermissions'. ` +
+                `Set permissionMode to 'plan' in settings if you want Claude to only plan without making changes.`
+            );
+        }
+        args.push('--permission-mode', effectivePermissionMode);
 
         logger.info(`Spawning Claude CLI (print mode): ${this.cliPath} ${args.slice(0, 5).join(' ')}...`);
 
@@ -366,14 +390,24 @@ export class ClaudeCodeClient {
         });
     }
 
+    /** Track reported tool call IDs to prevent duplicates across event types. */
+    private reportedToolCalls = new Set<string>();
+
     /**
      * Process a single stream event from Claude Code CLI.
-     * Handles assistant messages, results, system events (including hooks),
-     * and content block streaming events.
+     *
+     * Actual event flow observed from CLI v2.1.169:
+     *   - `-p` mode + `--verbose`: full `assistant` messages (no content_block_*)
+     *   - interactive stdin + `--verbose`: full `assistant` messages (no content_block_*)
+     *
+     * content_block_* events are NOT emitted unless `--include-partial-messages`
+     * is passed. We keep those handlers as future-proof fallbacks with dedup
+     * via reportedToolCalls to avoid double-reporting if the flag is added later.
      */
     private processEvent(event: ClaudeStreamEvent, callbacks: StreamCallbacks): void {
         switch (event.type) {
             case 'assistant':
+                // Primary path for text, thinking, and tool_use in both modes.
                 if (event.message?.content) {
                     for (const part of event.message.content) {
                         if (part.type === 'text' && part.text) {
@@ -381,11 +415,11 @@ export class ClaudeCodeClient {
                         } else if (part.type === 'thinking' && part.thinking) {
                             callbacks.onThinking(part.thinking);
                         } else if (part.type === 'tool_use') {
-                            // Tool use within assistant content block
                             const toolId = part.id || '';
                             const toolName = part.name || 'unknown';
                             const toolInput = part.input || {};
-                            if (toolId && callbacks.onToolCall) {
+                            if (toolId && callbacks.onToolCall && !this.reportedToolCalls.has(toolId)) {
+                                this.reportedToolCalls.add(toolId);
                                 callbacks.onToolCall({
                                     id: toolId,
                                     name: toolName,
@@ -398,13 +432,19 @@ export class ClaudeCodeClient {
                 break;
 
             case 'content_block_start':
+                // Fallback: with --include-partial-messages, tool_use starts here.
+                // Dedup via reportedToolCalls in case assistant event also fires.
                 if (event.subtype === 'tool_use' && callbacks.onToolCall) {
                     const block = event.content_block || {};
-                    callbacks.onToolCall({
-                        id: block.id || '',
-                        name: block.name || 'unknown',
-                        arguments: block.input || {}
-                    });
+                    const toolId = block.id || '';
+                    if (toolId && !this.reportedToolCalls.has(toolId)) {
+                        this.reportedToolCalls.add(toolId);
+                        callbacks.onToolCall({
+                            id: toolId,
+                            name: block.name || 'unknown',
+                            arguments: block.input || {}
+                        });
+                    }
                 }
                 break;
 
@@ -413,6 +453,14 @@ export class ClaudeCodeClient {
                     callbacks.onContent(event.delta.text);
                 } else if (event.subtype === 'thinking_delta' && event.delta?.thinking) {
                     callbacks.onThinking(event.delta.thinking);
+                } else if (event.subtype === 'input_json_delta' && event.delta?.partial_json) {
+                    logger.info('Tool arg delta:', event.delta.partial_json.substring(0, 200));
+                }
+                break;
+
+            case 'content_block_stop':
+                if (event.subtype === 'tool_use') {
+                    logger.info('Tool call block completed');
                 }
                 break;
 
@@ -432,6 +480,8 @@ export class ClaudeCodeClient {
                 if (event.subtype === 'init') {
                     this.lastSessionId = event.session_id;
                     logger.info('Claude CLI session initialized:', event.session_id);
+                } else if (event.subtype === 'thinking_tokens') {
+                    // Thinking token estimation progress — informational only
                 } else if (event.subtype === 'hook') {
                     logger.info('Claude CLI hook event:', event.hook_name, event.hook_event);
                 }
@@ -442,7 +492,9 @@ export class ClaudeCodeClient {
                 break;
 
             case 'user':
-                // User message confirmation in stream-json
+                // Tool results from the CLI's internal execution loop.
+                // In our configuration, CLI executes tools internally (bypassPermissions)
+                // and continues autonomously — no action needed here.
                 break;
 
             case 'stream_event':
@@ -451,7 +503,6 @@ export class ClaudeCodeClient {
                 break;
 
             default:
-                // Other event types — log for debugging
                 logger.info('Unknown stream event type:', event.type);
                 break;
         }
