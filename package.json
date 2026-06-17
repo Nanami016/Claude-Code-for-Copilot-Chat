@@ -2,7 +2,7 @@
   "name": "claude-code-for-copilot",
   "displayName": "Claude Code for Copilot Chat",
   "description": "Use Claude Code CLI directly in GitHub Copilot Chat. Zero config, uses your existing Claude Code installation.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "local",
   "license": "MIT",
   "repository": {
