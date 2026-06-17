@@ -91,6 +91,8 @@ export class ClaudeCodeClient {
     private permissionMode: string;
     private cwd?: string;
     private interactiveMode: boolean;
+    /** Latest session ID captured from the Claude CLI init event. */
+    private lastSessionId?: string;
 
     constructor(options: ClaudeClientOptions = {}) {
         this.cliPath = options.cliPath || 'claude';
@@ -233,6 +235,11 @@ export class ClaudeCodeClient {
                     reject(new Error(errorMsg));
                     return;
                 }
+
+                // Schedule nowledge-mem session save in the background.
+                // Claude Code writes transcript files even in non-TTY mode,
+                // so we call nmem directly instead of relying on hooks.
+                this.saveToNowledgeMem();
 
                 callbacks.onDone();
                 resolve();
@@ -424,6 +431,7 @@ export class ClaudeCodeClient {
 
             case 'system':
                 if (event.subtype === 'init') {
+                    this.lastSessionId = event.session_id;
                     logger.info('Claude CLI session initialized:', event.session_id);
                 } else if (event.subtype === 'hook') {
                     logger.info('Claude CLI hook event:', event.hook_name, event.hook_event);
@@ -471,6 +479,60 @@ export class ClaudeCodeClient {
             }
         }
         return parts.join('\n\n');
+    }
+
+    /**
+     * Schedule a background save of the current session to nowledge-mem.
+     * Claude Code writes transcript files to ~/.claude/projects/ even in
+     * non-TTY mode, so we call `nmem t save --from claude-code` directly
+     * to capture the session without depending on plugin hooks.
+     */
+    private saveToNowledgeMem(): void {
+        const { spawn } = require('child_process');
+
+        const args: string[] = [
+            't', 'save',
+            '--from', 'claude-code',
+            '-m', 'current'
+        ];
+
+        if (this.cwd) {
+            args.push('-p', this.cwd);
+        }
+
+        if (this.lastSessionId) {
+            args.push('--session-id', this.lastSessionId);
+        }
+
+        logger.info(`Saving session to nowledge-mem: nmem ${args.join(' ')}`);
+
+        const child = spawn('nmem', args, {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env: { ...process.env },
+            // Don't block extension shutdown
+            detached: true
+        });
+
+        let stderr = '';
+        child.stderr.on('data', (data: Buffer) => {
+            stderr += data.toString();
+        });
+
+        child.on('close', (code: number | null) => {
+            if (code === 0) {
+                logger.info('Session saved to nowledge-mem successfully');
+            } else {
+                logger.warn(`nowledge-mem save exited with code ${code}: ${stderr.trim()}`);
+            }
+            child.unref();
+        });
+
+        child.on('error', (err: Error) => {
+            // nmem not installed or not in PATH — non-fatal
+            logger.info('nowledge-mem not available, skipping session save:', err.message);
+        });
+
+        child.unref();
     }
 
     /**
