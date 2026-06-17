@@ -5,6 +5,10 @@
   "version": "0.2.0",
   "publisher": "local",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nanami016/Claude-Code-for-Copilot-Chat"
+  },
   "engines": {
     "vscode": "^1.116.0",
     "node": ">=24"
