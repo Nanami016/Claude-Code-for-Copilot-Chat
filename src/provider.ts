@@ -57,8 +57,8 @@ export class ClaudeCodeChatProvider implements vscode.LanguageModelChatProvider 
 
         return [
             {
-                id: 'cc-switch',
-                name: 'CC-Switch',
+                id: 'claude-code-cli',
+                name: 'Claude Code CLI',
                 family: 'claude',
                 version: '1.0.0',
                 detail: 'Claude Code CLI — agentic coding assistant',
