@@ -143,9 +143,17 @@ export class ClaudeCodeClient {
             args.push('--model', this.model);
         }
 
-        if (this.permissionMode && this.permissionMode !== 'default') {
-            args.push('--permission-mode', this.permissionMode);
+        // In non-TTY stdin mode, there is NO way to interactively approve
+        // permission prompts. Force bypassPermissions to prevent hangs.
+        const effectivePermissionMode = 'bypassPermissions';
+        if (this.permissionMode !== 'bypassPermissions') {
+            logger.warn(
+                `Interactive stdin mode has no TTY for permission prompts. ` +
+                `Overriding permission mode from '${this.permissionMode}' to 'bypassPermissions'. ` +
+                `Set interactiveMode=false to use -p print mode with custom permissions.`
+            );
         }
+        args.push('--permission-mode', effectivePermissionMode);
 
         logger.info(`Spawning Claude CLI (interactive stdin): ${this.cliPath} ${args.join(' ')}`);
 
