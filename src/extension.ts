@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
                     );
                 }
             }),
-            vscode.lm.registerLanguageModelChatProvider('cc-switch', provider)
+            vscode.lm.registerLanguageModelChatProvider('claude-code-cli', provider)
         );
 
         logger.info('Claude Code for Copilot extension activated');

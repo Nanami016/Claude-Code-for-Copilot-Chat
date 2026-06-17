@@ -1,6 +1,6 @@
 [English](README.en.md) | [简体中文](../../README.md) | 日本語
 
-# CC-Switch
+# Claude Code CLI
 
 GitHub Copilot Chat で [Claude Code CLI](https://claude.com/claude-code) を直接使用。設定不要、既存の Claude Code インストールをそのまま活用できます。
 
@@ -44,7 +44,7 @@ code --install-extension claude-code-for-copilot-*.vsix
 
 1. GitHub Copilot Chat を開く（`Cmd+Shift+I` またはサイドバーの Chat アイコンをクリック）
 2. Chat 上部の**モデルセレクター**をクリック
-3. **CC-Switch** を選択
+3. **Claude Code CLI** を選択
 4. 対話を開始！
 
 ## 設定項目
@@ -70,7 +70,7 @@ code --install-extension claude-code-for-copilot-*.vsix
 
 ## トラブルシューティング
 
-### モ델セレクターに CC-Switch が表示されない
+### モモデルセレクターに Claude Code CLI が表示されない
 
 1. Claude Code CLI がインストールされているか確認：`claude --version`
 2. コマンドパレットで "Claude Code: Check CLI Status" を実行

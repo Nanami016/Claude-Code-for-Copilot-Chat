@@ -1,8 +1,8 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "configurations": [
     {
-      "name": "Run Extension (CC-Switch)",
+      "name": "Run Extension (Claude Code CLI)",
       "type": "extensionHost",
       "request": "launch",
       "args": [
