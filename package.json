@@ -70,6 +70,11 @@
             "plan"
           ],
           "description": "Permission mode for Claude Code"
+        },
+        "claude-code-copilot.interactiveMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use interactive stdin mode to enable Claude Code plugins and hooks (e.g. nowledge-mem). Disable to use faster -p print mode (no plugin/hook support)."
         }
       }
     }
@@ -83,7 +88,10 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.116.0",
-    "typescript": "^5.7.0",
-    "@vscode/vsce": "^3.0.0"
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "@vscode/vsce": "^3.0.0",
+    "eslint": "^10.5.0",
+    "typescript": "^5.7.0"
   }
 }
