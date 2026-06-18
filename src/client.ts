@@ -510,6 +510,10 @@ export class ClaudeCodeClient {
 
     /**
      * Build a prompt string from an array of messages.
+     *
+     * Uses the Anthropic-standard Human/Assistant format for multi-turn
+     * conversations so the CLI correctly interprets message roles without
+     * leaking raw [User]/[Assistant] markers into the chat UI.
      */
     private buildPrompt(messages: ClaudeMessage[]): string {
         // If there's only one user message, use it directly
@@ -517,18 +521,20 @@ export class ClaudeCodeClient {
             return messages[0].content;
         }
 
-        // Otherwise, format as a conversation
+        // Format as a conversation using Anthropic's Human/Assistant conventions.
+        // This keeps role boundaries clean without polluting the chat output
+        // with [User]: / [Assistant]: text markers.
         const parts: string[] = [];
         for (const msg of messages) {
             if (msg.role === 'system') {
-                parts.push(`[System]: ${msg.content}`);
+                parts.push(msg.content);
             } else if (msg.role === 'user') {
-                parts.push(`[User]: ${msg.content}`);
+                parts.push(`\n\nHuman: ${msg.content}`);
             } else if (msg.role === 'assistant') {
-                parts.push(`[Assistant]: ${msg.content}`);
+                parts.push(`\n\nAssistant: ${msg.content}`);
             }
         }
-        return parts.join('\n\n');
+        return parts.join('').trimStart();
     }
 
     /**
