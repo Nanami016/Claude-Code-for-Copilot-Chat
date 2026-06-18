@@ -1,35 +1,35 @@
-[English](docs/md/README.en.md) | 简体中文 | [日本語](docs/md/README.ja.md)
+[English](README.en.md) | [简体中文](../../README.md) | [日本語](README.ja.md)
 
 # Claude Code CLI
 
-在 GitHub Copilot Chat 中直接使用 [Claude Code CLI](https://claude.com/claude-code)。零配置，直接复用你已有的 Claude Code 安装。
+Use [Claude Code CLI](https://claude.com/claude-code) directly in GitHub Copilot Chat. Zero configuration — just reuse your existing Claude Code installation.
 
-## 功能特性
+## Features
 
-- **直接调用 CLI**：通过 `claude` 命令 + `--output-format stream-json` 实时流式传输
-- **思考过程显示**：展示 Claude 的推理/思考过程
-- **工具调用**：支持 Claude Code 的工具调用能力
-- **零配置**：只要安装了 Claude Code CLI 即可使用
-- **百万级上下文**：1,000,000 token 输入上下文窗口
+- **Direct CLI Integration**: Stream responses in real-time via `claude` command + `--output-format stream-json`
+- **Thinking Process Display**: Shows Claude's reasoning and thinking process
+- **Tool Calling**: Supports Claude Code's tool calling capabilities
+- **Zero Configuration**: Works out of the box if Claude Code CLI is installed
+- **Million-Token Context**: 1,000,000 token input context window
 
-## 前置要求
+## Prerequisites
 
-- 已安装 [Claude Code CLI](https://claude.com/claude-code)，且 `claude` 命令在 PATH 中可用
-- VS Code 1.116.0 或更高版本
-- GitHub Copilot Chat 扩展
+- [Claude Code CLI](https://claude.com/claude-code) installed and available in PATH (`claude` command)
+- VS Code 1.116.0 or later
+- GitHub Copilot Chat extension
 
-## 安装方式
+## Installation
 
-### 方式一：通过 VSIX 安装（推荐）
+### Option 1: Install via VSIX (Recommended)
 
-1. 从 [Releases](https://github.com/Nanami016/Claude-Code-for-Copilot-Chat/releases) 下载最新的 `.vsix` 文件
-2. 安装：
+1. Download the latest `.vsix` from [Releases](https://github.com/Nanami016/Claude-Code-for-Copilot-Chat/releases)
+2. Install:
    ```bash
    code --install-extension claude-code-for-copilot-*.vsix
    ```
-3. 重载 VS Code（`Cmd+Shift+P` → `Reload Window`）
+3. Reload VS Code (`Cmd+Shift+P` → `Reload Window`)
 
-### 方式二：从源码构建
+### Option 2: Build from Source
 
 ```bash
 git clone https://github.com/Nanami016/Claude-Code-for-Copilot-Chat.git
@@ -40,48 +40,48 @@ npm run package -- --allow-missing-repository
 code --install-extension claude-code-for-copilot-*.vsix
 ```
 
-## 使用方法
+## Usage
 
-1. 打开 GitHub Copilot Chat（`Cmd+Shift+I` 或点击侧边栏 Chat 图标）
-2. 点击 Chat 顶部的**模型选择器**
-3. 选择 **Claude Code CLI**
-4. 开始对话！
+1. Open GitHub Copilot Chat (`Cmd+Shift+I` or click the Chat icon in the sidebar)
+2. Click the **model picker** at the top of the Chat panel
+3. Select **Claude Code CLI**
+4. Start chatting!
 
-## 配置项
+## Settings
 
-| 设置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `claude-code-copilot.cliPath` | `claude` | Claude Code CLI 可执行文件路径 |
-| `claude-code-copilot.defaultModel` | （空） | 默认使用的 Claude 模型（留空使用 CLI 默认值） |
-| `claude-code-copilot.permissionMode` | `default` | 权限模式：`default`、`acceptEdits` 或 `plan` |
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `claude-code-copilot.cliPath` | `claude` | Path to the Claude Code CLI executable |
+| `claude-code-copilot.defaultModel` | (empty) | Default Claude model (leave empty for CLI default) |
+| `claude-code-copilot.permissionMode` | `default` | Permission mode: `default`, `acceptEdits`, or `plan` |
 
-## 命令
+## Commands
 
-- **Claude Code: Show Logs** — 查看扩展日志
-- **Claude Code: Check CLI Status** — 检查 Claude Code CLI 是否可用
+- **Claude Code: Show Logs** — View extension logs
+- **Claude Code: Check CLI Status** — Check if Claude Code CLI is available
 
-## 工作原理
+## How It Works
 
-本扩展通过 VS Code 的 `LanguageModelChatProvider` API 注册为模型提供者，使 Claude Code 作为模型选项出现在 GitHub Copilot Chat 中。发送消息时，扩展会：
+This extension registers as a model provider via VS Code's `LanguageModelChatProvider` API, making Claude Code appear as a model option in GitHub Copilot Chat. When you send a message, the extension:
 
-1. 将聊天消息转换为 Claude Code 格式
-2. 调用 `claude -p --output-format stream-json --verbose`
-3. 将响应实时流式传输回 VS Code
+1. Converts chat messages into Claude Code format
+2. Invokes `claude -p --output-format stream-json --verbose`
+3. Streams the response back to VS Code in real-time
 
-## 常见问题
+## FAQ
 
-### 模型选择器中没有 Claude Code CLI
+### Claude Code CLI not showing in the model picker
 
-1. 检查 Claude Code CLI 是否已安装：`claude --version`
-2. 运行命令面板中的 "Claude Code: Check CLI Status"
-3. 查看日志："Claude Code: Show Logs"
+1. Check if Claude Code CLI is installed: `claude --version`
+2. Run "Claude Code: Check CLI Status" from the Command Palette
+3. View logs via "Claude Code: Show Logs"
 
-### 响应时出错
+### Errors when responding
 
-1. 确认 Claude Code CLI 能独立运行：`claude -p "Hello"`
-2. 检查你的 API Key 或认证配置
-3. 确认 `cliPath` 设置指向正确的可执行文件
+1. Verify Claude Code CLI works standalone: `claude -p "Hello"`
+2. Check your API Key or authentication configuration
+3. Ensure the `cliPath` setting points to the correct executable
 
-## 许可证
+## License
 
 MIT
